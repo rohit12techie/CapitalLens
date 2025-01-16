@@ -1,8 +1,9 @@
 // Main.cpp
-#include <QApplication>
 #include "dashboardpage.h"
 #include "login.h"
 #include "dbmanager.h"
+#include <QApplication>
+#include <QDebug>
 
 void setupDatabase() {
     // Set database parameters
@@ -14,8 +15,9 @@ void setupDatabase() {
         "",              // Username
         ""               // Password
     );
-
+    qDebug() << "Database parameters set";
     DatabaseManager::instance().initializeDatabase();
+    qDebug() << "Database initialized";
 }
 
 int main(int argc, char *argv[]) {

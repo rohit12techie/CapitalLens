@@ -55,21 +55,29 @@ QSqlDatabase DatabaseManager::getConnection() {
 
 void DatabaseManager::initializeDatabase() {
     QSqlDatabase db = getConnection();
-    if (db.isOpen()) {
-        QFile schemaFile(":/schema.sql");
-        if (schemaFile.open(QIODevice::ReadOnly | QIODevice::Text)) {
-            QString schemaContent = schemaFile.readAll();
-            QSqlQuery query(db);
-            if (!query.exec(schemaContent)) {
-                qWarning() << "Failed to execute schema:" << query.lastError().text();
-            } else {
-                qDebug() << "Database schema loaded successfully.";
+
+    if (!db.isOpen()) {
+        qWarning() << "Database is not open!";
+        return;
+    }
+
+    QFile schemaFile("resources/schema.sql");
+    if (!schemaFile.open(QIODevice::ReadOnly | QIODevice::Text)) {
+        qWarning() << "Failed to open schema file:" << schemaFile.errorString();
+        return;
+    }
+
+    QStringList schemaStatements = QString(schemaFile.readAll()).split(';', QString::SkipEmptyParts);
+    schemaFile.close();
+
+    QSqlQuery query(db);
+    for (const QString &statement : schemaStatements) {
+        if (!statement.trimmed().isEmpty()) {
+            if (!query.exec(statement.trimmed())) {
+                qWarning() << "Failed to execute statement:" << query.lastError().text();
+                qWarning() << "Statement:" << statement;
             }
-        } else {
-            qWarning() << "Failed to open schema file.";
         }
-    } else {
-        qWarning() << "Database connection is not open!";
     }
 }
 

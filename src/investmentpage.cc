@@ -1,4 +1,6 @@
 #include "investmentpage.h"
+#include "dbmanager.h"
+
 #include <QMessageBox>
 #include <QtSql/QSqlDatabase>
 #include <QtSql/QSqlQuery>
@@ -6,6 +8,7 @@
 #include <iostream>
 #include <QGroupBox>
 #include <QScrollArea>
+#include <QDebug>
 
 InvestmentForm::InvestmentForm(QWidget *parent) : QWidget(parent) {
     QVBoxLayout *mainLayout = new QVBoxLayout(this);
@@ -120,15 +123,35 @@ void InvestmentForm::updateTotal() {
 }
 
 bool InvestmentForm::saveEntry(const QString &type, double amount, const QString &month) {
-    QSqlQuery query;
-    QString user = "admin";
-    query.prepare("INSERT INTO investments (user, month, type, amount) VALUES (:user, :month, :type, :amount)");
-    query.bindValue(":user", user);
-    query.bindValue(":month", month);
-    query.bindValue(":type", type);
-    query.bindValue(":amount", amount);
+    bool ok = false;
+    QSqlDatabase db = DatabaseManager::instance().getConnection();
+    if (db.isOpen()) {
+        QSqlQuery query(db);
+        QString user = "admin";
+        QString comment = "Investment";
+        query.prepare("INSERT INTO investments (user, month, type, amount, comment, created_at) VALUES (:user, :month, :type, :amount, :comment, CURRENT_TIMESTAMP)");
+        query.bindValue(":user", user);
+        query.bindValue(":month", month);
+        query.bindValue(":type", type);
+        query.bindValue(":amount", amount);
+        query.bindValue(":comment", comment);
+        query.bindValue(":created_at", QDateTime::currentDateTime());
 
-    return query.exec();
+        ok = query.exec();
+        if (!ok) {
+            qWarning() << "Failed to execute query:" << query.lastError().text();
+        } else {
+            qDebug() << "Investment saved successfully!";
+        }
+    } else {
+        qWarning() << "Database connection is not open!";
+    }
+
+    // Release the connection
+    QString connectionName = QString("DB_%1").arg(reinterpret_cast<quintptr>(QThread::currentThreadId()));
+    DatabaseManager::instance().releaseConnection(connectionName);
+
+    return ok;
 }
 
 void InvestmentForm::saveToDatabase() {
