@@ -22,6 +22,9 @@ private slots:
     void handleYearChange(int delta);
     void handleMonthClick();
 
+signals:
+    void calenderChanged();
+
 private:
     int currentYear;
     QLabel *yearLabel;

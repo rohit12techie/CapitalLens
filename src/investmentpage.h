@@ -20,10 +20,18 @@ public:
     explicit InvestmentForm(QWidget *parent = nullptr);
 
 private slots:
-    void addEntryRow();            // Adds a new row for investment type and amount
-    void updateTotal();            // Updates the total investment dynamically
-    void saveToDatabase();         // Saves all entries to the database
-    void updateFormForMonth();     // Updates form header for selected month
+    void initializeForm();
+    void addEntryRow();
+    void addEntryRow(const QString &type, const QString &amount, const QString &comment);
+    void updateTotal();
+    void saveToDatabase();
+    void updateFormForMonth();
+    void loadEntries();
+    void clearRows();
+    void removeEntryRow(int row);
+
+public slots:
+    void onCalenderChange();
 
 private:
     QGridLayout *entryLayout;      // Layout for dynamic rows
@@ -37,10 +45,11 @@ private:
 
     std::vector<QComboBox*> typeInputs;    // Store investment type inputs
     std::vector<QLineEdit*> amountInputs;  // Store investment amount inputs
+    std::vector<QLineEdit*> commentInputs;  // Store investment amount inputs
 
     double totalInvestment = 0;   // Tracks the total investment
     QDate currentMonth;           // Tracks the currently selected month
-    bool saveEntry(const QString &type, double amount, const QString &month); // Saves an individual entry
+    bool saveEntry(const QString &type, double amount, const QString &month, const QString &comment); // Saves an individual entry
 };
 
 #endif // INVESTMENTFORM_H

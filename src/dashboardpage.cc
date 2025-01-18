@@ -49,8 +49,8 @@ Dashboard::Dashboard(QWidget *parent) : QWidget(parent) {
     stackedWidget = new QStackedWidget(this);
     stackedWidget->addWidget(new Reports(this));
     stackedWidget->addWidget(new InvestmentForm(this));
-    stackedWidget->addWidget(new CashInCashOut(this));
-    stackedWidget->addWidget(new Portfolio(this));
+    // stackedWidget->addWidget(new CashInCashOut(this));
+    // stackedWidget->addWidget(new Portfolio(this));
 
     QHBoxLayout *layout = new QHBoxLayout(this);
     navigation->setSizePolicy(QSizePolicy::Minimum, QSizePolicy::MinimumExpanding);

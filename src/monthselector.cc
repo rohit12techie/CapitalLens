@@ -70,13 +70,15 @@ void MonthSelector::handleYearChange(int delta) {
                 monthButton->setStyleSheet("");
 
                 // Highlight the active month for the current year
-                if (currentYear == currentDate.year() && (i + 1) == currentMonth) {
+                if ((i + 1) == currentMonth) {
                     activeMonth = monthButton;
                     activeMonth->setStyleSheet("background-color: #ff6e6e; color: white; font-weight: bold;");
                 }
             }
         }
     }
+
+    emit calenderChanged();
 }
 
 void MonthSelector::handleMonthClick() {
@@ -90,6 +92,7 @@ void MonthSelector::handleMonthClick() {
         // Highlight the clicked button
         activeMonth = clickedButton;
         activeMonth->setStyleSheet("background-color: #ff6e6e; color: white; font-weight: bold;");
+        emit calenderChanged();
     }
 }
 
