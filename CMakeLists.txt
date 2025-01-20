@@ -18,6 +18,9 @@ set(SOURCES
     src/reports.cc
     src/dbmanager.cc
     src/monthselectorlayout.cc
+    src/entryrow.cc
+    src/entrygroupbox.cc
+    src/totallabel.cc
 )
 
 # Add the header files for automatic MOC processing
@@ -31,7 +34,12 @@ set(HEADERS
     src/reports.h
     src/dbmanager.h
     src/monthselectorlayout.h
+    src/entryrow.h
+    src/entrygroupbox.h
+    src/totallabel.h
 )
+
+set(CMAKE_BUILD_TYPE Debug)
 
 # Create the executable
 add_executable(${PROJECT_NAME} ${SOURCES} ${HEADERS})
