@@ -24,6 +24,15 @@ InvestmentForm::InvestmentForm(QWidget *parent) : QWidget(parent) {
 
     // Save button
     saveButton = new QPushButton("Save to Database", this);
+    saveButton->setFixedSize(200, 50);
+    saveButton->setStyleSheet(
+        "QPushButton {"
+        "font-weight: bold;"
+        "font-size: 12px;" /* Larger font size for visibility */
+        "padding: 8px 16px;" /* Extra padding for better aesthetics */
+        "text-align: center;" /* Center the text */
+        "}"
+    );
     saveButton->setEnabled(false); // Initially disabled
     mainLayout->addWidget(saveButton);
 
