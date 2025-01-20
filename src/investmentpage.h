@@ -12,6 +12,7 @@
 #include <QDateEdit>
 #include <vector>
 #include "monthselector.h"
+#include "monthselectorlayout.h"
 
 class InvestmentForm : public QWidget {
     Q_OBJECT

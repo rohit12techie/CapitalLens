@@ -17,6 +17,7 @@ set(SOURCES
     src/cashincashout.cc
     src/reports.cc
     src/dbmanager.cc
+    src/monthselectorlayout.cc
 )
 
 # Add the header files for automatic MOC processing
@@ -29,6 +30,7 @@ set(HEADERS
     src/cashincashout.h
     src/reports.h
     src/dbmanager.h
+    src/monthselectorlayout.h
 )
 
 # Create the executable

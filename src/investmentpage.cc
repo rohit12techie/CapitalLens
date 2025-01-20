@@ -13,13 +13,10 @@
 InvestmentForm::InvestmentForm(QWidget *parent) : QWidget(parent) {
     QVBoxLayout *mainLayout = new QVBoxLayout(this);
 
-    yearMonthSelector = new MonthSelector(this);
-    QGroupBox *smallContainer = new QGroupBox("Select Year and Month", this);
-    smallContainer->setAlignment(Qt::AlignCenter);
-    smallContainer->setFixedSize(300, 200); // Adjust size as needed
-    QVBoxLayout *containerLayout = new QVBoxLayout(smallContainer);
-    containerLayout->addWidget(yearMonthSelector);
-    mainLayout->addWidget(smallContainer, 0, Qt::AlignCenter);
+    MonthYearSelectorLayout *monthYearSelectorLayout = new MonthYearSelectorLayout();
+    mainLayout->addWidget(monthYearSelectorLayout, 0, Qt::AlignCenter);
+    yearMonthSelector = monthYearSelectorLayout->getMonthSelector();
+
 
     // Create a group box to encapsulate the grid layout
     QGroupBox *entryGroupBox = new QGroupBox("Investment Entries", this);
@@ -283,6 +280,12 @@ void InvestmentForm::addEntryRow() {
     commentInput->setPlaceholderText("Comment");
     entryLayout->addWidget(commentInput, row, 2);
     commentInputs.push_back(commentInput);
+
+    // Remove row button for loaded entries
+    if(row - 1 > 1){
+        QPushButton *removeRowButton = new QPushButton("-", this);
+        entryLayout->addWidget(removeRowButton, row - 1, 3) ;
+    }
 
     QPushButton *addRowButton = new QPushButton("+", this);
     addRowButton->setEnabled(false); // Initially disabled
