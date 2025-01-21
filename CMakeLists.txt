@@ -21,6 +21,7 @@ set(SOURCES
     src/entryrow.cc
     src/entrygroupbox.cc
     src/totallabel.cc
+    src/savebutton.cc
 )
 
 # Add the header files for automatic MOC processing
@@ -37,6 +38,7 @@ set(HEADERS
     src/entryrow.h
     src/entrygroupbox.h
     src/totallabel.h
+    src/savebutton.h
 )
 
 set(CMAKE_BUILD_TYPE Debug)

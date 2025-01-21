@@ -15,6 +15,7 @@
 #include "monthselectorlayout.h"
 #include "entrygroupbox.h"
 #include "totallabel.h"
+#include "savebutton.h"
 
 class InvestmentForm : public QWidget {
     Q_OBJECT
@@ -35,7 +36,7 @@ public slots:
 private:
     EntryGroupBox *entryGroupBox;
     TotalLabel* totalLabel;
-    QPushButton *saveButton;
+    SaveButton *saveButton;
     MonthSelector* yearMonthSelector;
     bool saveEntry(const QString &type, double amount, const QString &month, const QString &comment); // Saves an individual entry
 };
