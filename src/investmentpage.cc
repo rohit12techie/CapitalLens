@@ -33,8 +33,8 @@ InvestmentForm::InvestmentForm(QWidget *parent) : QWidget(parent) {
         "text-align: center;" /* Center the text */
         "}"
     );
-    saveButton->setEnabled(false); // Initially disabled
-    mainLayout->addWidget(saveButton);
+    saveButton->setEnabled(false);
+    mainLayout->addWidget(saveButton, 0, Qt::AlignCenter);
 
     connect(entryGroupBox, &EntryGroupBox::rowUpdate, this, &InvestmentForm::updateTotal);
     connect(saveButton, &QPushButton::clicked, this, &InvestmentForm::saveToDatabase);
