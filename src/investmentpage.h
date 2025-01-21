@@ -29,8 +29,8 @@ private slots:
     void updateTotal();
     void saveToDatabase();
     void loadEntries();
-
-public slots:
+    void enableSaveButton();
+    void disableSaveButton();
     void onCalenderChange();
 
 private:

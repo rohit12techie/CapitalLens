@@ -42,16 +42,15 @@ void EntryGroupBox::loadEntryRow(const QString &investmentType, const QString &a
     row->setComment(comment);
     entryLayout->addWidget(row);
     row->toggleButtonSign();
-
     rowList.append(row);
-    emit rowUpdate();
 
     // Connect the remove signal to delete the row
     connect(row, &EntryRow::removeRequested, this, [this, row]() {
         entryLayout->removeWidget(row);
         row->deleteLater();
         rowList.removeOne(row);
-        emit rowUpdate();
+        emit updateRow();
+        emit updateTotal();
     });
 }
 
@@ -62,22 +61,23 @@ void EntryGroupBox::addEntryRow(const QString &investmentType, const QString &am
     row->setInvestmentType(investmentType);
     row->setAmount(amount);
     row->setComment(comment);
-
     entryLayout->addWidget(row);
-
+    emit updateTotal();
 
     // Connect the remove signal to delete the row
     connect(row, &EntryRow::removeRequested, this, [this, row]() {
         entryLayout->removeWidget(row);
         row->deleteLater();
         rowList.removeOne(row);
-        emit rowUpdate();
+        emit updateRow();
+        emit updateTotal();
     });
 
     connect(row, &EntryRow::addRequested, this, [this, row]() {
         rowList.append(row);
         addEntryRow();
-        emit rowUpdate();
+        emit updateRow();
+        emit updateTotal();
     });
 }
 

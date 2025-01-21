@@ -25,9 +25,10 @@ InvestmentForm::InvestmentForm(QWidget *parent) : QWidget(parent) {
     saveButton = new SaveButton(this);
     mainLayout->addWidget(saveButton, 0, Qt::AlignCenter);
 
-    connect(entryGroupBox, &EntryGroupBox::rowUpdate, this, &InvestmentForm::updateTotal);
+    connect(entryGroupBox, &EntryGroupBox::updateTotal, this, &InvestmentForm::updateTotal);
     connect(saveButton, &QPushButton::clicked, this, &InvestmentForm::saveToDatabase);
     connect(yearMonthSelector, &MonthSelector::calenderChanged, this, &InvestmentForm::onCalenderChange);
+    connect(entryGroupBox, &EntryGroupBox::updateRow, this, &InvestmentForm::enableSaveButton);
 
     initializeForm();
 }
@@ -71,9 +72,6 @@ void InvestmentForm::loadEntries() {
     DatabaseManager::instance().releaseConnection(connectionName);
 }
 
-
-
-
 void InvestmentForm::addEntryRow() {
     entryGroupBox->addEntryRow("", "", "");
 }
@@ -100,9 +98,15 @@ void InvestmentForm::updateTotal() {
     }
 
     totalLabel->setTotal(QString::number(totalInvestment, 'f', 2));
-    saveButton->setEnabled(valid && totalInvestment > 0);
 }
 
+void InvestmentForm::enableSaveButton() {
+    saveButton->setEnabled(true);
+}
+
+void InvestmentForm::disableSaveButton() {
+    saveButton->setEnabled(false);
+}
 bool InvestmentForm::saveEntry(const QString &type, double amount, const QString &month, const QString &comment) {
     bool ok = false;
     QSqlDatabase db = DatabaseManager::instance().getConnection();
@@ -155,9 +159,11 @@ void InvestmentForm::saveToDatabase() {
     }
 
     QMessageBox::information(this, "Success", "Data saved successfully for " + selectedMonth + "!");
+    disableSaveButton();
 }
 
 void InvestmentForm::onCalenderChange() {
     qWarning() << "Signals Month changed!";
+    disableSaveButton();
     initializeForm();
 }

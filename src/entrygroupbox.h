@@ -14,7 +14,8 @@ public:
     QList<EntryRow *> getEntries();
 
 signals:
-    void rowUpdate();
+    void updateRow();
+    void updateTotal();
 
 private:
     QList<EntryRow *> rowList;
