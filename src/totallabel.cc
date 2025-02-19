@@ -1,10 +1,11 @@
 #include "totallabel.h"
 #include <QHBoxLayout>
 
-TotalLabel::TotalLabel(QWidget *parent) : QGroupBox(parent)
-{
-    setTitle("Total Investment");
+TotalLabel::TotalLabel(QWidget *parent, const QString &title) : QGroupBox(title, parent) {
+    setupUI();
+}
 
+void TotalLabel::setupUI() {
     m_label = new QLabel("0", this);
     m_label->setStyleSheet(
         "QLabel {"
@@ -35,7 +36,10 @@ TotalLabel::TotalLabel(QWidget *parent) : QGroupBox(parent)
     );
 }
 
-void TotalLabel::setTotal(const QString& total)
-{
+void TotalLabel::setTitle(const QString& title) {
+    setTitle(title);
+}
+
+void TotalLabel::setTotal(const QString& total) {
     m_label->setText(total);
 }

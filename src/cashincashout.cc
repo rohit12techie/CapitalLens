@@ -1,4 +1,5 @@
 #include "cashincashout.h"
+#include "dbmanager.h"
 #include <QMessageBox>
 #include <QtSql/QSqlDatabase>
 #include <QtSql/QSqlQuery>
@@ -6,233 +7,229 @@
 #include <iostream>
 #include <QGroupBox>
 #include <QScrollArea>
-#include <QDoubleSpinBox>
+#include <QDebug>
 
 CashInCashOut::CashInCashOut(QWidget *parent) : QWidget(parent) {
     QVBoxLayout *mainLayout = new QVBoxLayout(this);
 
-    // Year and Month Selector
-    yearMonthSelector = new MonthSelector(this);
-    QGroupBox *smallContainer = new QGroupBox("Select Year and Month", this);
-    smallContainer->setAlignment(Qt::AlignCenter);
-    smallContainer->setFixedSize(300, 200);
+    MonthYearSelectorLayout *monthYearSelectorLayout = new MonthYearSelectorLayout();
+    mainLayout->addWidget(monthYearSelectorLayout, 0, Qt::AlignCenter);
+    yearMonthSelector = monthYearSelectorLayout->getMonthSelector();
 
-    QVBoxLayout *containerLayout = new QVBoxLayout(smallContainer);
-    containerLayout->addWidget(yearMonthSelector);
-    mainLayout->addWidget(smallContainer, 0, Qt::AlignCenter);
-
-    // Horizontal Layout for Cash In and Cash Out
     QHBoxLayout *cashSectionsLayout = new QHBoxLayout();
+    cashInEntryGroupBox = new EntryGroupBox("Cash IN", this);
+    cashSectionsLayout->addWidget(cashInEntryGroupBox);
 
-    // Cash In Section
-    QGroupBox *cashInGroupBox = new QGroupBox("Cash In", this);
-    cashInGroupBox->setStyleSheet(
-        "QGroupBox {"
-        "border: 2px solid #cccccc;"
-        "border-radius: 8px;"
-        "margin-top: 10px;"
-        "padding: 10px;"
-        "font-weight: bold;"
-        "background-color: #f1f8e9;" // Light green background
-        "}"
-        "QGroupBox::title {"
-        "subcontrol-origin: margin;"
-        "subcontrol-position: top center;"
-        "padding: 0 5px;"
-        "}"
-    );
+    cashOutEntryGroupBox = new EntryGroupBox("Cash Out", this);
+    cashSectionsLayout->addWidget(cashOutEntryGroupBox);
 
-    QScrollArea *cashInScrollArea = new QScrollArea(this);
-    cashInScrollArea->setWidgetResizable(true);
-
-    QWidget *cashInContainer = new QWidget();
-    QGridLayout *cashInLayout = new QGridLayout(cashInContainer);
-    cashInLayout->setAlignment(Qt::AlignTop);
-    cashInContainer->setLayout(cashInLayout);
-
-    cashInScrollArea->setWidget(cashInContainer);
-
-    QVBoxLayout *cashInGroupBoxLayout = new QVBoxLayout();
-    cashInGroupBoxLayout->addWidget(cashInScrollArea);
-    cashInGroupBox->setLayout(cashInGroupBoxLayout);
-
-    cashSectionsLayout->addWidget(cashInGroupBox);
-
-    // Cash Out Section
-    QGroupBox *cashOutGroupBox = new QGroupBox("Cash Out", this);
-    cashOutGroupBox->setStyleSheet(
-        "QGroupBox {"
-        "border: 2px solid #cccccc;"
-        "border-radius: 8px;"
-        "margin-top: 10px;"
-        "padding: 10px;"
-        "font-weight: bold;"
-        "background-color: #ffebee;" // Light red background
-        "}"
-        "QGroupBox::title {"
-        "subcontrol-origin: margin;"
-        "subcontrol-position: top center;"
-        "padding: 0 5px;"
-        "}"
-    );
-
-    QScrollArea *cashOutScrollArea = new QScrollArea(this);
-    cashOutScrollArea->setWidgetResizable(true);
-
-    QWidget *cashOutContainer = new QWidget();
-    QGridLayout *cashOutLayout = new QGridLayout(cashOutContainer);
-    cashOutLayout->setAlignment(Qt::AlignTop);
-    cashOutContainer->setLayout(cashOutLayout);
-
-    cashOutScrollArea->setWidget(cashOutContainer);
-
-    QVBoxLayout *cashOutGroupBoxLayout = new QVBoxLayout();
-    cashOutGroupBoxLayout->addWidget(cashOutScrollArea);
-    cashOutGroupBox->setLayout(cashOutGroupBoxLayout);
-
-    cashSectionsLayout->addWidget(cashOutGroupBox);
-
-    // Add the horizontal layout to the main layout
     mainLayout->addLayout(cashSectionsLayout);
 
-    // Add Row Buttons
-    QPushButton *addCashInRowButton = new QPushButton("+ Add Cash In Row", this);
-    QPushButton *addCashOutRowButton = new QPushButton("+ Add Cash Out Row", this);
+    QHBoxLayout *cashTotalLayout = new QHBoxLayout();
+    cashInTotalLabel = new TotalLabel(this, "Cash-In Total");
+    cashOutTotalLabel = new TotalLabel(this, "Cash-Out Total");
+    cashTotalLayout->addWidget(cashInTotalLabel);
+    cashTotalLayout->addWidget(cashOutTotalLabel);
+    mainLayout->addLayout(cashTotalLayout);
 
-    mainLayout->addWidget(addCashInRowButton);
-    mainLayout->addWidget(addCashOutRowButton);
+    totalLabel = new TotalLabel(this);
+    mainLayout->addWidget(totalLabel);
 
-    connect(addCashInRowButton, &QPushButton::clicked, this, [=]() {
-        int row = cashInLayout->rowCount();
-        cashInLayout->addWidget(new QLabel("Source: ", this), row, 0);
-        cashInLayout->addWidget(new QLineEdit(this), row, 1);
-        cashInLayout->addWidget(new QDoubleSpinBox(this), row, 2); // Amount
-    });
+    saveButton = new SaveButton(this);
+    mainLayout->addWidget(saveButton, 0, Qt::AlignCenter);
 
-    connect(addCashOutRowButton, &QPushButton::clicked, this, [=]() {
-        int row = cashOutLayout->rowCount();
-        cashOutLayout->addWidget(new QLabel("Expense: ", this), row, 0);
-        cashOutLayout->addWidget(new QLineEdit(this), row, 1);
-        cashOutLayout->addWidget(new QDoubleSpinBox(this), row, 2); // Amount
-    });
-
-    // Totals Section
-    QLabel *totalCashInLabel = new QLabel("Total Cash In: $0.00", this);
-    QLabel *totalCashOutLabel = new QLabel("Total Cash Out: $0.00", this);
-    QLabel *cashLeftLabel = new QLabel("Cash Left in Hand: $0.00", this);
-
-    totalCashInLabel->setStyleSheet("font-size: 16px; font-weight: bold; color: #2e7d32;"); // Green
-    totalCashOutLabel->setStyleSheet("font-size: 16px; font-weight: bold; color: #c62828;"); // Red
-    cashLeftLabel->setStyleSheet("font-size: 18px; font-weight: bold; color: #1565c0;"); // Blue
-
-    mainLayout->addWidget(totalCashInLabel);
-    mainLayout->addWidget(totalCashOutLabel);
-    mainLayout->addWidget(cashLeftLabel);
-
-    // // Save Button
-    // saveButton = new QPushButton("Save to Database", this);
-    // saveButton->setEnabled(false);
-    // mainLayout->addWidget(saveButton);
-
-    // connect(saveButton, &QPushButton::clicked, this, &CashInCashOut::saveToDatabase);
-
-
-
-    //     // Total label
-    //     totalLabel = new QLabel("Total Investment: 0", this);
-    //     totalLabel->setStyleSheet(
-    //     "QLabel {"
-    //     "font-size: 18px;"
-    //     "font-weight: bold;"
-    //     "color: #1b5e20;"
-    //     "}");
-    //     totalLabel->setAlignment(Qt::AlignLeft);
-    //     mainLayout->addWidget(totalLabel);
-
-    //     // Save button
-    //     saveButton = new QPushButton("Save to Database", this);
-    //     saveButton->setEnabled(false); // Initially disabled
-    //     mainLayout->addWidget(saveButton);
+    connect(cashInEntryGroupBox, &EntryGroupBox::updateTotal, this, &CashInCashOut::updateCashInTotal);
+    connect(cashOutEntryGroupBox, &EntryGroupBox::updateTotal, this, &CashInCashOut::updateCashOutTotal);
     connect(saveButton, &QPushButton::clicked, this, &CashInCashOut::saveToDatabase);
+    connect(yearMonthSelector, &MonthSelector::calenderChanged, this, &CashInCashOut::onCalenderChange);
+    connect(cashInEntryGroupBox, &EntryGroupBox::updateRow, this, &CashInCashOut::enableSaveButton);
+    connect(cashOutEntryGroupBox, &EntryGroupBox::updateRow, this, &CashInCashOut::enableSaveButton);
+    initializeForm();
+}
+
+void CashInCashOut::initializeForm() {
+    loadEntries(); // Load data from the database
+    addEntryRow(); // Add a blank row for new entry
+}
+
+void CashInCashOut::loadEntries() {
+    auto loadEntriesFromDatabase = [this](const QString &tableName, EntryGroupBox *entryGroupBox) {
+        entryGroupBox->clearRows();
+
+        QString selectedMonth = yearMonthSelector->getSelectedMonth();
+        QSqlDatabase db = DatabaseManager::instance().getConnection();
+        if (db.isOpen()) {
+            QSqlQuery query(db);
+            query.prepare(QString("SELECT type, amount, comment FROM %1 WHERE month = :month").arg(tableName));
+            query.bindValue(":month", selectedMonth);
+
+            if (!query.exec()) {
+                qWarning() << "Failed to load entries from the database:" << query.lastError().text();
+                return;
+            }
+
+            while (query.next()) {
+                QString type = query.value(0).toString();
+                QString amount = query.value(1).toString();
+                QString comment = query.value(2).toString();
+                qWarning() << "Debugging warning ::" << "Type: " << type << " Amount: " << amount << " Comment: " << comment;
+
+                // Add a new row with the retrieved data
+                entryGroupBox->loadEntryRow(type, amount, comment);
+            }
+        } else {
+            qWarning() << "Database connection is not open!";
+        }
+
+        QString connectionName = QString("DB_%1").arg(reinterpret_cast<quintptr>(QThread::currentThreadId()));
+        DatabaseManager::instance().releaseConnection(connectionName);
+    };
+
+    loadEntriesFromDatabase("cashin", cashInEntryGroupBox);
+    loadEntriesFromDatabase("cashout", cashOutEntryGroupBox);
 }
 
 void CashInCashOut::addEntryRow() {
-    int row = entryLayout->rowCount();
-
-    // Investment type dropdown or custom input
-    QComboBox *typeInput = new QComboBox(this);
-    typeInput->setEditable(true); // Allow custom types
-    typeInput->addItems({"Stocks", "Bonds", "Mutual Funds", "Real Estate", "FD", "Others"});
-    entryLayout->addWidget(typeInput, row, 0);
-    typeInputs.push_back(typeInput);
-
-    // Investment amount input
-    QLineEdit *amountInput = new QLineEdit(this);
-    amountInput->setPlaceholderText("Enter amount");
-    entryLayout->addWidget(amountInput, row, 1);
-    amountInputs.push_back(amountInput);
-
-    // Connect signal to dynamically update total
-    connect(amountInput, &QLineEdit::textChanged, this, &CashInCashOut::updateTotal);
-    connect(amountInput, &QLineEdit::editingFinished, this, &CashInCashOut::updateTotal);
+    cashInEntryGroupBox->addEntryRow("", "", "");
+    cashOutEntryGroupBox->addEntryRow("", "", "");
 }
 
-void CashInCashOut::updateTotal() {
-    totalInvestment = 0;
+void CashInCashOut::updateCashInTotal() {
+    totalCashIn = 0;
     bool valid = true;
 
-    for (auto *amountInput : amountInputs) {
+    qDebug() << "Updating total cash-in investment...";
+
+    QList<EntryRow *> entries = cashInEntryGroupBox->getEntries();
+
+    for (auto *entry : entries) {
         bool ok;
-        double value = amountInput->text().toDouble(&ok);
-        if (!ok && !amountInput->text().isEmpty()) {
+        double value = entry->getAmount().toDouble(&ok);
+        qDebug() << "Value: " << value;
+        qDebug() << "Ok: " << ok;
+
+        if (!ok && !entry->getAmount().isEmpty()) {
             valid = false;
             continue;
         }
-        totalInvestment += value;
+        totalCashIn += value;
     }
 
-    totalLabel->setText("Current total portfolio: " + QString::number(totalInvestment, 'f', 2));
-    saveButton->setEnabled(valid && totalInvestment > 0);
+    cashInTotalLabel->setTotal(QString::number(totalCashIn, 'f', 2));
+    updateTotal();
 }
 
-bool CashInCashOut::saveEntry(const QString &type, double amount, const QString &month) {
-    QSqlQuery query;
-    QString user = "admin";
-    QString comment = "";
-    query.prepare("INSERT INTO cashin (user, month, source, amount, comment) VALUES (:user, :month, :source, :amount, :comment)");
-    query.bindValue(":user", user);
-    query.bindValue(":month", month);
-    query.bindValue(":type", type);
-    query.bindValue(":amount", amount);
-    query.bindValue(":comment", comment);
+void CashInCashOut::updateCashOutTotal() {
+    totalCashOut = 0;
+    bool valid = true;
 
-    return query.exec();
+    qDebug() << "Updating total cash-out investment...";
+
+    QList<EntryRow *> entries = cashOutEntryGroupBox->getEntries();
+
+    for (auto *entry : entries) {
+        bool ok;
+        double value = entry->getAmount().toDouble(&ok);
+        qDebug() << "Value: " << value;
+        qDebug() << "Ok: " << ok;
+
+        if (!ok && !entry->getAmount().isEmpty()) {
+            valid = false;
+            continue;
+        }
+        totalCashOut += value;
+    }
+
+    cashOutTotalLabel->setTotal(QString::number(totalCashOut, 'f', 2));
+    updateTotal();
+}
+
+void CashInCashOut::updateTotal() {
+    double totalInvestment = 0;
+    bool valid = true;
+
+    qDebug() << "Updating total investment...";
+    totalInvestment = totalCashIn - totalCashOut;
+    totalLabel->setTotal(QString::number(totalInvestment, 'f', 2));
+}
+
+void CashInCashOut::enableSaveButton() {
+    saveButton->setEnabled(true);
+}
+
+void CashInCashOut::disableSaveButton() {
+    saveButton->setEnabled(false);
+}
+
+bool CashInCashOut::saveEntry(const QString tableName, const QString &type, double amount, const QString &month, const QString &comment) {
+    bool ok = false;
+    QSqlDatabase db = DatabaseManager::instance().getConnection();
+    if (db.isOpen()) {
+        QSqlQuery query(db);
+        QString user = "admin";
+        query.prepare(QString("INSERT INTO %1 (user, month, type, amount, comment, created_at) \
+                                VALUES (:user, :month, :type, :amount, :comment, CURRENT_TIMESTAMP)").arg(tableName));
+        query.bindValue(":user", user);
+        query.bindValue(":month", month);
+        query.bindValue(":type", type);
+        query.bindValue(":amount", amount);
+        query.bindValue(":comment", comment);
+        query.bindValue(":created_at", QDateTime::currentDateTime());
+
+        ok = query.exec();
+        if (!ok) {
+            qWarning() << "Failed to execute query:" << query.lastError().text();
+        } else {
+            qDebug() << "Investment saved successfully!";
+        }
+    } else {
+        qWarning() << "Database connection is not open!";
+    }
+
+    QString connectionName = QString("DB_%1").arg(reinterpret_cast<quintptr>(QThread::currentThreadId()));
+    DatabaseManager::instance().releaseConnection(connectionName);
+
+    return ok;
 }
 
 void CashInCashOut::saveToDatabase() {
-    //QString selectedMonth = monthSelector->date().toString("MMMM yyyy");
     QString selectedMonth = yearMonthSelector->getSelectedMonth();
 
-    for (int i = 0; i < typeInputs.size(); ++i) {
-        QString type = typeInputs[i]->currentText();
-        bool ok;
-        double amount = amountInputs[i]->text().toDouble(&ok);
+    auto saveEntries = [this, &selectedMonth](EntryGroupBox *entryGroupBox, const QString &tableName) {
+        QList<EntryRow *> entries = entryGroupBox->getEntries();
 
-        if (type.isEmpty() || !ok || amount <= 0) {
-            QMessageBox::warning(this, "Input Error", "Please ensure all entries are valid before saving.");
-            return;
-        }
+        for (auto *entry : entries) {
+            bool ok;
+            QString type = entry->getInvestmentType();
+            QString comment = entry->getComment();
+            double amount = entry->getAmount().toDouble(&ok);
 
-        if (!saveEntry(type, amount, selectedMonth)) {
-            QMessageBox::critical(this, "Database Error", "Failed to save data.");
-            return;
+            if (type.isEmpty() || !ok || amount <= 0) {
+                QMessageBox::warning(this, "Input Error", "Please ensure all entries are valid before saving.");
+                return false;
+            }
+
+            if (!saveEntry(tableName, type, amount, selectedMonth, comment)) {
+                QMessageBox::critical(this, "Database Error", "Failed to save data.");
+                return false;
+            }
         }
+        return true;
+    };
+
+    if (!saveEntries(cashInEntryGroupBox, "cashin")) {
+        return;
+    }
+    if(!saveEntries(cashOutEntryGroupBox, "cashout")) {
+        return;
     }
 
     QMessageBox::information(this, "Success", "Data saved successfully for " + selectedMonth + "!");
+    disableSaveButton();
 }
 
-void CashInCashOut::updateFormForMonth() {
-    QString selectedMonth = monthSelector->date().toString("MMMM yyyy");
-    monthHeaderLabel->setText("Selected Month: " + selectedMonth);
+void CashInCashOut::onCalenderChange() {
+    qWarning() << "Signals Month changed!";
+    disableSaveButton();
+    initializeForm();
 }

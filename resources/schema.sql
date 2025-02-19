@@ -14,7 +14,7 @@ CREATE TABLE IF NOT EXISTS portfolio (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     user TEXT NOT NULL,
     month TEXT NOT NULL,
-    source TEXT NOT NULL,
+    type TEXT NOT NULL,
     amount REAL NOT NULL,
     comment TEXT,
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP
@@ -24,7 +24,7 @@ CREATE TABLE IF NOT EXISTS cashin (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     user TEXT NOT NULL,
     month TEXT NOT NULL,
-    source TEXT NOT NULL,
+    type TEXT NOT NULL,
     amount REAL NOT NULL,
     comment TEXT,
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP
@@ -34,7 +34,7 @@ CREATE TABLE IF NOT EXISTS cashout (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     user TEXT NOT NULL,
     month TEXT NOT NULL,
-    target TEXT NOT NULL,
+    type TEXT NOT NULL,
     amount REAL NOT NULL,
     comment TEXT,
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP

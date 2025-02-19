@@ -1,3 +1,6 @@
+#ifndef ENTRYGROUPBOX_H
+#define ENTRYGROUPBOX_H
+
 #include "entryrow.h"
 #include <QGroupBox>
 #include <QScrollArea>
@@ -26,3 +29,5 @@ private:
 
     void setupUI();
 };
+
+#endif // ENTRYGROUPBOX_H
