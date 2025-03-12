@@ -56,13 +56,14 @@ void Portfolio::loadEntries() {
         }
 
         while (query.next()) {
+            uint id = 0;
             QString type = query.value(0).toString();
             QString amount = query.value(1).toString();
             QString comment = query.value(2).toString();
             qWarning() << "Debugging warning ::" << "Type: " << type << " Amount: " << amount << " Comment: " << comment;
 
             // Add a new row with the retrieved data
-            entryGroupBox->loadEntryRow(type, amount, comment);
+            entryGroupBox->loadEntryRow(id, type, amount, comment);
         }
     } else {
         qWarning() << "Database connection is not open!";
@@ -73,7 +74,7 @@ void Portfolio::loadEntries() {
 }
 
 void Portfolio::addEntryRow() {
-    entryGroupBox->addEntryRow("", "", "");
+    entryGroupBox->addEntryRow(0, "", "", "");
 }
 
 void Portfolio::updateTotal() {

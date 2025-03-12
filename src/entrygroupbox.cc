@@ -1,4 +1,5 @@
 #include "entrygroupbox.h"
+#include <QDebug>
 
 EntryGroupBox::EntryGroupBox(const QString &title, QWidget *parent)
     : QGroupBox(title, parent), scrollArea(new QScrollArea(this)) {
@@ -33,10 +34,11 @@ void EntryGroupBox::setupUI() {
     this->setLayout(groupBoxLayout);
 }
 
-void EntryGroupBox::loadEntryRow(const QString &investmentType, const QString &amount, const QString &comment) {
+void EntryGroupBox::loadEntryRow(unsigned int id, const QString &investmentType, const QString &amount, const QString &comment) {
     auto *row = new EntryRow(this);
 
     // Set initial values
+    row->setId(id);
     row->setInvestmentType(investmentType);
     row->setAmount(amount);
     row->setComment(comment);
@@ -46,6 +48,7 @@ void EntryGroupBox::loadEntryRow(const QString &investmentType, const QString &a
 
     // Connect the remove signal to delete the row
     connect(row, &EntryRow::removeRequested, this, [this, row]() {
+        removeRowList.append(row->getId());
         entryLayout->removeWidget(row);
         row->deleteLater();
         rowList.removeOne(row);
@@ -54,10 +57,11 @@ void EntryGroupBox::loadEntryRow(const QString &investmentType, const QString &a
     });
 }
 
-void EntryGroupBox::addEntryRow(const QString &investmentType, const QString &amount, const QString &comment) {
+void EntryGroupBox::addEntryRow(unsigned int id, const QString &investmentType, const QString &amount, const QString &comment) {
     auto *row = new EntryRow(this);
 
     // Set initial values
+    row->setId(id);
     row->setInvestmentType(investmentType);
     row->setAmount(amount);
     row->setComment(comment);
@@ -66,11 +70,14 @@ void EntryGroupBox::addEntryRow(const QString &investmentType, const QString &am
 
     // Connect the remove signal to delete the row
     connect(row, &EntryRow::removeRequested, this, [this, row]() {
+        removeRowList.append(row->getId());
         entryLayout->removeWidget(row);
         row->deleteLater();
         rowList.removeOne(row);
         emit updateRow();
         emit updateTotal();
+
+        qDebug() << "Removed Rows: " << removeRowList.size();
     });
 
     connect(row, &EntryRow::addRequested, this, [this, row]() {
@@ -94,4 +101,8 @@ void EntryGroupBox::clearRows() {
 
 QList<EntryRow*> EntryGroupBox::getEntries() {
     return rowList;
+}
+
+QList<unsigned int> EntryGroupBox::getRemovedEntries() {
+    return removeRowList;
 }

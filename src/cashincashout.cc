@@ -69,13 +69,14 @@ void CashInCashOut::loadEntries() {
             }
 
             while (query.next()) {
+                uint id = 0;
                 QString type = query.value(0).toString();
                 QString amount = query.value(1).toString();
                 QString comment = query.value(2).toString();
                 qWarning() << "Debugging warning ::" << "Type: " << type << " Amount: " << amount << " Comment: " << comment;
 
                 // Add a new row with the retrieved data
-                entryGroupBox->loadEntryRow(type, amount, comment);
+                entryGroupBox->loadEntryRow(id, type, amount, comment);
             }
         } else {
             qWarning() << "Database connection is not open!";
@@ -90,8 +91,8 @@ void CashInCashOut::loadEntries() {
 }
 
 void CashInCashOut::addEntryRow() {
-    cashInEntryGroupBox->addEntryRow("", "", "");
-    cashOutEntryGroupBox->addEntryRow("", "", "");
+    cashInEntryGroupBox->addEntryRow(0, "", "", "");
+    cashOutEntryGroupBox->addEntryRow(0, "", "", "");
 }
 
 void CashInCashOut::updateCashInTotal() {

@@ -22,6 +22,7 @@ set(SOURCES
     src/entrygroupbox.cc
     src/totallabel.cc
     src/savebutton.cc
+    src/dbservice.cc
 )
 
 # Add the header files for automatic MOC processing
@@ -39,6 +40,7 @@ set(HEADERS
     src/entrygroupbox.h
     src/totallabel.h
     src/savebutton.h
+    src/dbservice.h
 )
 
 set(CMAKE_BUILD_TYPE Debug)

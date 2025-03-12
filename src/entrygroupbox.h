@@ -11,10 +11,11 @@ class EntryGroupBox : public QGroupBox {
 public:
     explicit EntryGroupBox(const QString &title, QWidget *parent = nullptr);
 
-    void addEntryRow(const QString &investmentType = "", const QString &amount = "", const QString &comment = "");
-    void loadEntryRow(const QString &investmentType = "", const QString &amount = "", const QString &comment = "");
+    void addEntryRow(unsigned int id = 0, const QString &investmentType = "", const QString &amount = "", const QString &comment = "");
+    void loadEntryRow(unsigned int id = 0, const QString &investmentType = "", const QString &amount = "", const QString &comment = "");
     void clearRows();
     QList<EntryRow *> getEntries();
+    QList<unsigned int> getRemovedEntries();
 
 signals:
     void updateRow();
@@ -22,6 +23,7 @@ signals:
 
 private:
     QList<EntryRow *> rowList;
+    QList<unsigned int> removeRowList;
     QScrollArea *scrollArea;
     QVBoxLayout *entryLayout; // Use QVBoxLayout for rows
     QWidget *entryContainer;

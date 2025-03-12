@@ -1,9 +1,10 @@
 #include "entryrow.h"
+#include <QDebug>
 
 EntryRow::EntryRow(QWidget *parent)
     : QWidget(parent), investmentTypeEdit(new QLineEdit(this)),
       amountEdit(new QLineEdit(this)), commentEdit(new QLineEdit(this)),
-      actionButton(new QPushButton("+", this)) {
+      actionButton(new QPushButton("+", this)), isModified(false) {
 
     setupUI();
 
@@ -12,8 +13,20 @@ EntryRow::EntryRow(QWidget *parent)
     commentEdit->setPlaceholderText("Comment");
 
     connect(actionButton, &QPushButton::clicked, this, &EntryRow::onActionButtonClicked);
+
+    // Inside your class constructor or initialization function
+    connect(investmentTypeEdit, &QLineEdit::textChanged, this, &EntryRow::rowModified);
+    connect(amountEdit, &QLineEdit::textChanged, this, &EntryRow::rowModified);
+    connect(commentEdit, &QLineEdit::textChanged, this, &EntryRow::rowModified);
 }
 
+void EntryRow::setId(unsigned int id) {
+    this->id = id;
+}
+
+unsigned int EntryRow::getId() {
+    return this->id;
+}
 
 void EntryRow::toggleButtonSign() {
     if (actionButton->text() == "+") {
@@ -30,6 +43,13 @@ void EntryRow::onActionButtonClicked() {
     }
 }
 
+void EntryRow::rowModified() {
+    qDebug() << __func__ << "::" << "Row modified!";
+    qDebug() << __func__ << "::" << "Row ID: " << id;
+    isModified = true;
+    emit updateRequested(this);
+}
+
 void EntryRow::setupUI() {
     layout = new QHBoxLayout(this);
     layout->addWidget(investmentTypeEdit);
@@ -38,6 +58,10 @@ void EntryRow::setupUI() {
     layout->addWidget(actionButton);
     layout->setContentsMargins(0, 0, 0, 0); // Optional: reduce margins
     setLayout(layout);
+}
+
+bool EntryRow::isUpdated() const {
+    return isModified;
 }
 
 QString EntryRow::getInvestmentType() const {

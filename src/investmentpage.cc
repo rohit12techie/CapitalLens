@@ -30,6 +30,7 @@ InvestmentForm::InvestmentForm(QWidget *parent) : QWidget(parent) {
     connect(yearMonthSelector, &MonthSelector::calenderChanged, this, &InvestmentForm::onCalenderChange);
     connect(entryGroupBox, &EntryGroupBox::updateRow, this, &InvestmentForm::enableSaveButton);
 
+    dbservice = new DBService();
     initializeForm();
 }
 
@@ -43,37 +44,27 @@ void InvestmentForm::loadEntries() {
 
     bool ok = false;
     QString selectedMonth = yearMonthSelector->getSelectedMonth();
-    QSqlDatabase db = DatabaseManager::instance().getConnection();
-    if (db.isOpen()) {
-        QSqlQuery query(db);
-        query.prepare("SELECT type, amount, comment FROM investments WHERE month = :month");
-        query.bindValue(":month", selectedMonth);
-        ok = query.exec();
+    int selectedYear = yearMonthSelector->getSelectedYear();
 
-        if (!query.exec()) {
-            qWarning() << "Failed to load entries from the database:" << query.lastError().text();
-            return;
-        }
+    qDebug() << "LoadEntries:: Selected Month: " << selectedMonth;
+    qDebug() << "LoadEntries:: Selected Year: " << selectedYear;
 
-        while (query.next()) {
-            QString type = query.value(0).toString();
-            QString amount = query.value(1).toString();
-            QString comment = query.value(2).toString();
-            qWarning() << "Debugging warning ::" << "Type: " << type << " Amount: " << amount << " Comment: " << comment;
+    QSqlQuery query = dbservice->readUserDataMonth(QString("admin"), selectedYear, selectedMonth);
+    qDebug() << "rohit XXX :::" << query.isValid();
 
-            // Add a new row with the retrieved data
-            entryGroupBox->loadEntryRow(type, amount, comment);
-        }
-    } else {
-        qWarning() << "Database connection is not open!";
+    while (query.next()) {
+        unsigned int id = query.value(0).toUInt();
+        QString type = query.value(1).toString();
+        double amount = query.value(2).toDouble();
+        QString comment = query.value(3).toString();
+        QString createdAt = query.value(4).toString();
+        entryGroupBox->loadEntryRow(id, type, QString::number(amount, 'f', 2), comment);
+        qDebug() << "|entry_id: "<< id <<"| Type:" << type << "| Amount:" << amount << "| Comment:" << comment << "| Created At:" << createdAt;
     }
-
-    QString connectionName = QString("DB_%1").arg(reinterpret_cast<quintptr>(QThread::currentThreadId()));
-    DatabaseManager::instance().releaseConnection(connectionName);
 }
 
 void InvestmentForm::addEntryRow() {
-    entryGroupBox->addEntryRow("", "", "");
+    entryGroupBox->addEntryRow(0, "", "", "");
 }
 
 void InvestmentForm::updateTotal() {
@@ -107,6 +98,7 @@ void InvestmentForm::enableSaveButton() {
 void InvestmentForm::disableSaveButton() {
     saveButton->setEnabled(false);
 }
+
 bool InvestmentForm::saveEntry(const QString &type, double amount, const QString &month, const QString &comment) {
     bool ok = false;
     QSqlDatabase db = DatabaseManager::instance().getConnection();
@@ -131,32 +123,63 @@ bool InvestmentForm::saveEntry(const QString &type, double amount, const QString
         qWarning() << "Database connection is not open!";
     }
 
-    QString connectionName = QString("DB_%1").arg(reinterpret_cast<quintptr>(QThread::currentThreadId()));
-    DatabaseManager::instance().releaseConnection(connectionName);
+    return true;
 
-    return ok;
 }
 
 void InvestmentForm::saveToDatabase() {
     QString selectedMonth = yearMonthSelector->getSelectedMonth();
-    QList<EntryRow *> entries = entryGroupBox->getEntries();
+    int selectedYear = yearMonthSelector->getSelectedYear();
 
+    dbservice->addYearForUser("admin", selectedYear);
+    dbservice->addMonthForYear("admin", selectedYear, selectedMonth);
+
+    QList<EntryRow *> entries = entryGroupBox->getEntries();
     for (auto *entry : entries) {
         bool ok;
+        unsigned int id = entry->getId();
         QString type = entry->getInvestmentType();
         QString comment = entry->getComment();
         double amount = entry->getAmount().toDouble(&ok);
 
+        qDebug() << __func__ << "::" << "Saving entry...";
+        qDebug() << "ID: " << id;
+        qDebug() << "Type: " << type;
+        qDebug() << "Amount: " << amount;
+        qDebug() << "Comment: " << comment;
+        qDebug() << "Updated: " << entry->isUpdated();
+
         if (type.isEmpty() || !ok || amount <= 0) {
-            QMessageBox::warning(this, "Input Error", "Please ensure all entries are valid before saving.");
+            QMessageBox::warning(this, "Input Error", "Move this validatioan logic at the top of the function.");
             return;
         }
 
-        if (!saveEntry(type, amount, selectedMonth, comment)) {
+        if(id == 0) {
+            if(! dbservice->addEntryForMonth("admin", selectedYear, selectedMonth, type, amount, comment)) {
+                QMessageBox::critical(this, "Database Error", "Failed to save data.");
+                return;
+            }
+        } else if(entry->isUpdated()) {
+            if(! dbservice->updateEntry("admin", selectedYear, selectedMonth, id, type, amount, comment)) {
+                QMessageBox::critical(this, "Database Error", "Failed to save data.");
+                return;
+            }
+        }
+    }
+
+    QList<unsigned int> removedEntries = entryGroupBox->getRemovedEntries();
+    qDebug() << "Removed Entries: " << removedEntries.size();
+    for (auto entryId : removedEntries) {
+
+        qDebug() << __func__ << "::" << "removing entry...";
+        qDebug() << "ID: " << entryId;
+
+        if(! dbservice->deleteEntry("admin", selectedYear, selectedMonth, entryId)) {
             QMessageBox::critical(this, "Database Error", "Failed to save data.");
             return;
         }
     }
+
 
     QMessageBox::information(this, "Success", "Data saved successfully for " + selectedMonth + "!");
     disableSaveButton();
